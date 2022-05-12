@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "GitHubOrg",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "RepositoryName",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "OIDCProviderArn",
+    "ParameterValue": ""
+  }
+]
