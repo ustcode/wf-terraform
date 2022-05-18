@@ -1,6 +1,7 @@
 CF_STACKNAME = github-oidc
 CF_TEMPLATE = github-oidc.cf
 CF_PARAMS = github-oidc.json
+BUCKETNAME = $(shell aws cloudformation describe-stack-resources --stack-name $(CF_STACKNAME) --query 'StackResources[?LogicalResourceId==`TfBackend`].PhysicalResourceId' --output text)
 
 list: 
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
@@ -14,5 +15,10 @@ update: $(CF_TEMPLATE) $(CF_PARAMS)
 
 clean:
 	aws cloudformation delete-stack --stack-name $(CF_STACKNAME)
+
+.SILENT:
+check:
+	$(eval BNAME := $(BUCKETNAME))
+	$(if $(findstring tfstate,$(BNAME)), $(info Terraform S3 Bucket Name: $(BNAME)), $(info Stack is not deployed, or deploy is incomplete.))
 
 .PHONY: list deploy update clean
