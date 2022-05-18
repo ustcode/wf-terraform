@@ -1,11 +1,15 @@
 Parameters:
-  GitHubOrg:
+  GitHubRepoName:
+    Description: The org/name of the repository granted access to the AWS account.
     Type: String
-  RepositoryName:
-    Type: String
+    AllowedPattern: ^([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)$
   OIDCProviderArn:
-    Description: Arn for the GitHub OIDC Provider.
+    Description: ARN for the GitHub OIDC Provider.
     Default: ""
+    Type: String
+  ManagedPolicy:
+    Description: The AWS managed policy used by the repository.
+    Default: PowerUserAccess
     Type: String
 
 Conditions:
@@ -18,7 +22,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       ManagedPolicyArns:
-        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/${ManagedPolicy}'
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -30,7 +34,7 @@ Resources:
                 - !Ref OIDCProviderArn
             Condition:
               StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${RepositoryName}:*
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepoName}:*
 
   GithubOidc:
     Type: AWS::IAM::OIDCProvider
@@ -44,9 +48,11 @@ Resources:
 
   TfBackend:
     Type: 'AWS::S3::Bucket'
-    DeletionPolicy: Retain
     Properties:
-      BucketName: yy4eisse
+      BucketName:
+        !Sub
+          - 'tfstate-${RandomGUID}'
+          - { RandomGUID: !Select [0, !Split ["-", !Select [2, !Split ["/", !Ref AWS::StackId ]]]] }
       VersioningConfiguration:
         Status: Enabled
       PublicAccessBlockConfiguration:
@@ -67,8 +73,13 @@ Resources:
                 TransitionInDays: 30
             NoncurrentVersionExpiration:
               NoncurrentDays: 365
+
 Outputs:
   role:
     Value: !GetAtt Role.Arn
     Export:
-      Name: !Sub '${AWS::StackName}-role'
+      Name: gha-tf-role
+  tfstate:
+    Value: !Ref TfBackend
+    Export:
+      Name: gha-tf-s3-backend

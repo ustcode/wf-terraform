@@ -1,14 +1,14 @@
 [
   {
-    "ParameterKey": "GitHubOrg",
-    "ParameterValue": ""
-  },
-  {
-    "ParameterKey": "RepositoryName",
+    "ParameterKey": "GitHubRepoName",
     "ParameterValue": ""
   },
   {
     "ParameterKey": "OIDCProviderArn",
     "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "ManagedPolicy",
+    "ParameterValue": "AdministratorAccess"
   }
 ]
