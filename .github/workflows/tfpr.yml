@@ -6,6 +6,10 @@ defaults:
   run:
     shell: bash
 
+env:
+  HAVE_AWSREGION: ${{ secrets.AWSREGION != '' }}
+  HAVE_AWSROLE: ${{ secrets.AWSROLE != '' }}
+
 jobs:
   lint:
     name: 'Terraform Linter'
@@ -16,8 +20,8 @@ jobs:
         terraform-versions: [latest]
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
 
+      uses: actions/checkout@v3
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
@@ -27,9 +31,26 @@ jobs:
       id: fmt
       run: terraform fmt -list=true -diff -check -recursive
 
+  check:
+    name: 'Plan Pre-Checks'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        terraform-versions: [latest]
+    outputs:
+      status: ${{ steps.early.conclusion }}
+    steps:
+    - id: secret
+      name: Secrets Check
+      if: ${{ env.HAVE_AWSROLE != 'true' && env.HAVE_AWSREGION != 'true' }}
+      run: /usr/bin/true
+
   plan:
     name: 'Terraform Plan'
     runs-on: ${{ matrix.os }}
+    needs: check
+    if: needs.check.outputs.status == 'success'
     permissions:
       id-token: write
       contents: read
@@ -72,7 +93,6 @@ jobs:
 
     - name: Publish Terraform Plan Output
       uses: actions/github-script@v6
-      if: github.ref != 'refs/heads/main' && github.event_name == 'pull_request'
       env:
         PLAN: "${{ steps.plan.outputs.stdout }}"
       with:
