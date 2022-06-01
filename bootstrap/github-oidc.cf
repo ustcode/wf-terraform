@@ -7,10 +7,9 @@ Parameters:
     Description: ARN for the GitHub OIDC Provider.
     Default: ""
     Type: String
-  ManagedPolicy:
-    Description: The AWS managed policy used by the repository.
-    Default: PowerUserAccess
-    Type: String
+  ManagedPolicyArns:
+    Description: A list of ARNs of the IAM managed policies that you want to attache to the role.
+    Type: CommaDelimitedList
 
 Conditions:
   CreateOIDCProvider: !Equals 
@@ -21,8 +20,8 @@ Resources:
   Role:
     Type: AWS::IAM::Role
     Properties:
-      ManagedPolicyArns:
-        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/${ManagedPolicy}'
+      ManagedPolicyArns: !Ref ManagedPolicyArns
+      Path: !Sub /${GitHubRepoName}/
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
