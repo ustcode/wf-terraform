@@ -5,14 +5,16 @@ This folder provides instructions and tools for bootstrapping GitHub Actions Ter
 Steps:
 
 1. Complete prerequisites.
-   
+
 2. Update `github-oidc.json` with account specific parameters.
 
 3. Bootstrap the AWS account.
 
-4. Configure the Terraform backend.
+4. Set secrets for GitHub Actions
 
-5. Commit the changes.
+5. Configure the Terraform backend.
+
+6. Commit the changes.
 
 ## 1. Prerequisites
 
@@ -36,9 +38,9 @@ The ARN for the GitHub OIDC provider.  Provide this if the OIDC provider has bee
 
 Example: `arn:aws-us-gov:iam::012345678901:oidc-provider/token.actions.githubusercontent.com`
 
-### Parameter: ManagedPolicy
+### Parameter: ManagedPolicyArns
 
-The name of an [AWS-managed IAM policy](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-vs-inline.html#aws-managed-policies) that will be used to provide permissions to GitHub Actions.  Default: PowerUserAccess.
+The names of [AWS-managed IAM policies](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-vs-inline.html#aws-managed-policies) that will be used to provide permissions to GitHub Actions.  Default: ReadOnlyAccess.
 
 ## 3. Bootstrap the AWS Account
 
@@ -61,11 +63,22 @@ Stack is not deployed, or deploy is incomplete.
 
 $ make check
 Terraform S3 Bucket Name: tfstate-13726d80
+Role Name: github-oidc-Role-1HBRRFWJJQC2L
+Role ARN: arn:aws-us-gov:iam::123456789012:role/[GitHubRepoName]/github-oidc-Role-1HBRRFWJJQC2L
 ```
 
 Save the S3 bucket name for the last step.
 
-## 4. Configure the Terraform Backend
+## 4. Set secrets for GitHub Actions
+
+The GitHub Actions scripts need to be provided the AWS region and AWS Role ARN using the [GitHub secrets subsystem](https://docs.github.com/en/actions/security-guides/encrypted-secrets).  Set two values:
+
+| Secret | Example | Description |
+| ------ | ------- | ----------- |
+| AWSREGION | us-gov-west-1 | The AWS region where the credentials are requested. |
+| AWSROLE | arn:aws-us-gov:iam::123456789012:role/[GitHubRepoName]/github-oidc-Role-1HBRRFWJJQC2L | The IAM role to assume for AWS API requests. |
+
+## 5. Configure the Terraform Backend
 
 The terraform backend is configured in the `terraform.tf` file.  It should look something like this:
 
@@ -78,11 +91,12 @@ terraform {
     encrypt = "true"
   }
 }
-
-`BUCKETNAME`: Use the bucket name from step 3.
-`ORGANIZATION/REPOSITORY`: Use the value from GitHubRepoName in step 2
 ```
 
-## 5. Commit the changes...
+`BUCKETNAME`: Use the bucket name from step 3.
+
+`ORGANIZATION/REPOSITORY`: Use the value from GitHubRepoName in step 2
+
+## 6. Commit Changes
 
 ...and check refer to [/README.md](/README.md) for further details!  The first run will set up `terraform.tfstate` in the S3 bucket.

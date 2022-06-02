@@ -9,6 +9,10 @@ defaults:
   run:
     shell: bash
 
+env:
+  HAVE_AWSREGION: ${{ secrets.AWSREGION != '' }}
+  HAVE_AWSROLE: ${{ secrets.AWSROLE != '' }}
+
 jobs:
   lint:
     name: 'Terraform Linter'
@@ -30,9 +34,26 @@ jobs:
       id: fmt
       run: terraform fmt -list=true -diff -check -recursive
 
+  check:
+    name: 'Plan Pre-Checks'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        terraform-versions: [latest]
+    outputs:
+      status: ${{ steps.secret.conclusion }}
+    steps:
+    - id: secret
+      name: Secrets Check
+      if: ${{ env.HAVE_AWSROLE == 'true' && env.HAVE_AWSREGION == 'true' }}
+      run: /usr/bin/true
+
   apply:
     name: 'Terraform Apply'
     runs-on: ${{ matrix.os }}
+    needs: check
+    if: needs.check.outputs.status == 'success'
     permissions:
       id-token: write
       contents: read
@@ -41,14 +62,18 @@ jobs:
         os: [ubuntu-latest]
         terraform-versions: [latest]
     steps:
+    - name: Precondition Check
+      if: ${{ env.HAVE_AWSROLE != 'true' && env.HAVE_AWSREGION != 'true' }}
+      run: exit_with_success
+
     - name: Checkout
       uses: actions/checkout@v3
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        role-to-assume: arn:aws-us-gov:iam::012345678901:role/github-oidc-terraform-role
-        aws-region: us-gov-west-1
+        role-to-assume: ${{ secrets.AWSROLE }}
+        aws-region: ${{ secrets.AWSREGION }}
 
     - name: Test AWS Credentials
       run: aws sts get-caller-identity
