@@ -65,7 +65,16 @@ Terraform S3 Bucket Name: tfstate-13726d80
 
 Save the S3 bucket name for the last step.
 
-## 4. Configure the Terraform Backend
+## 4. Set secrets for GitHub Actions
+
+The GitHub Actions scripts need to be provided the AWS region and AWS Role ARN using the [GitHub secrets subsystem](https://docs.github.com/en/actions/security-guides/encrypted-secrets).  Set two values:
+
+| Secret | Example | Description |
+| ------ | ------- | ----------- |
+| AWSREGION | us-east-2 | The AWS region where the credentials are requested. |
+| AWSROLE | arn:aws:iam::123456789012:role/gha-role | The IAM role to assume for AWS API requests. |
+
+## 5. Configure the Terraform Backend
 
 The terraform backend is configured in the `terraform.tf` file.  It should look something like this:
 
@@ -83,6 +92,6 @@ terraform {
 `ORGANIZATION/REPOSITORY`: Use the value from GitHubRepoName in step 2
 ```
 
-## 5. Commit the changes...
+## 6. Commit the changes...
 
 ...and check refer to [/README.md](/README.md) for further details!  The first run will set up `terraform.tfstate` in the S3 bucket.

@@ -67,8 +67,8 @@ jobs:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        role-to-assume: arn:aws-us-gov:iam::012345678901:role/github-oidc-terraform-role
-        aws-region: us-gov-west-1
+        role-to-assume: ${{ secrets.AWSROLE }}
+        aws-region: ${{ secrets.AWSREGION }}
 
     - name: Test AWS Credentials
       run: aws sts get-caller-identity
