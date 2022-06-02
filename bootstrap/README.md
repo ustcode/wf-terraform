@@ -5,7 +5,7 @@ This folder provides instructions and tools for bootstrapping GitHub Actions Ter
 Steps:
 
 1. Complete prerequisites.
-   
+
 2. Update `github-oidc.json` with account specific parameters.
 
 3. Bootstrap the AWS account.
@@ -92,6 +92,6 @@ terraform {
 `ORGANIZATION/REPOSITORY`: Use the value from GitHubRepoName in step 2
 ```
 
-## 6. Commit the changes...
+## 6. Commit Changes
 
 ...and check refer to [/README.md](/README.md) for further details!  The first run will set up `terraform.tfstate` in the S3 bucket.
