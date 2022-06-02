@@ -39,11 +39,11 @@ jobs:
         os: [ubuntu-latest]
         terraform-versions: [latest]
     outputs:
-      status: ${{ steps.early.conclusion }}
+      status: ${{ steps.secret.conclusion }}
     steps:
     - id: secret
       name: Secrets Check
-      if: ${{ env.HAVE_AWSROLE != 'true' && env.HAVE_AWSREGION != 'true' }}
+      if: ${{ env.HAVE_AWSROLE == 'true' && env.HAVE_AWSREGION == 'true' }}
       run: /usr/bin/true
 
   plan:
